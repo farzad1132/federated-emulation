@@ -10,11 +10,17 @@ class LogMode(Enum):
     info = "INFO"
     debug = "DEBUG"
 
-def logger(message: str, mode: LogMode = LogMode.info, type: LogType = LogType.info):
-    if mode == LogMode.off:
-        return
-    
-    if mode == LogMode.info and type == LogType.debug:
-        return
-    
-    print(f"[{type.value}] {message}")
+class Logger:
+    def __init__(self, title: str, rank: int, mode: LogMode) -> None:
+        self.title = title
+        self.rank = rank
+        self.mode = mode
+        
+    def log(self, message: str, type: LogType = LogType.info):
+        if self.mode == LogMode.off:
+            return
+        
+        if self.mode == LogMode.info and type == LogType.debug:
+            return
+        
+        print(f"[{type.value}][{self.title}, rank={self.rank}] {message}")
