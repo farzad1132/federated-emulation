@@ -28,6 +28,20 @@ class CustomDataSet(Dataset):
 
 def create_data_loader(loader, batch_size: int, test_size: float = 0.2, transform: bool = True) \
     -> Tuple[DataLoader, Tuple]:
+    """
+        This function prepares data for training and testing process
+
+        parameters:
+            1. loader: sklearn dataset
+            2. batch_size
+            3. test_size: proportion of the whole dataset used for test
+            4. transform: boolean indicating scaling of dataset
+        
+        returns:
+            1. dataloader: training data loader
+            2. x_test
+            3. y_test
+    """
 
     x, y = loader(return_X_y=True)
     if transform:
@@ -43,6 +57,9 @@ def create_data_loader(loader, batch_size: int, test_size: float = 0.2, transfor
 
 
 class CentralizedModel(nn.Module):
+    """
+        MLP model used for modeling regression problem
+    """
 
     def __init__(self, layer_size_vec: List) -> None:
         super().__init__()
@@ -60,6 +77,24 @@ class CentralizedModel(nn.Module):
 
 def trainer(model: nn.Module, n_epoch: int, train_loader: DataLoader, optimizer,
     loss_fn, x_test, y_test, logger_index: int = 1) -> Tuple:
+    """
+        This function trains a model
+
+        parameters:
+            1. model: pyTorch model
+            2. n_epoch: number of epochs
+            3. train_loader: training dataset loader
+            4. optimizer: pyTorch optimizer
+            5. loss_fn: loss function
+            6. x_test: testing data points
+            7. y_test: testing labels
+            8. logger_index: used to indicate how to sample results from training process
+        
+        returns:
+            1. epoch_list
+            2. train_loss_hist: training loss history
+            3. test_loss_hist: testing loss history 
+    """
 
     y_test = torch.reshape(y_test, (-1, 1))
     y_train = torch.reshape(train_loader.dataset.y, (-1, 1))
@@ -94,6 +129,18 @@ def trainer(model: nn.Module, n_epoch: int, train_loader: DataLoader, optimizer,
 
 def main(batch_size: int = 30, test_size: float = 0.2, lr: float = 0.01,
         n_epoch: int = 80, logger_index: int = 1, transform: bool = True, n: int = 20):
+    """
+        Main function executing centralized learning procedure.
+
+        parameters:
+            1. batch_size
+            2. test_size: proportion of the whole dataset used for test
+            3. lr: learning rate
+            4. n_epoch: number of epochs
+            5. logger_index: used to indicate how to sample results from training process
+            6. transform: boolean indicating scaling of dataset
+            7. n: number of independent runs used for Confidence Interval calculation
+    """
     
     train_int_hist = np.zeros((n, n_epoch))
     test_int_hist = np.zeros((n, n_epoch))
@@ -101,6 +148,7 @@ def main(batch_size: int = 30, test_size: float = 0.2, lr: float = 0.01,
     print(f"""[INFO] parameters: batch_size: {batch_size}, test_size: {test_size}, lr: {lr}"""
         f""", n_epoch: {n_epoch}, logger_index: {logger_index}, n: {n}""")
 
+    # loop over independent runs
     for run_index in range(n):
 
         train_data_loader, (x_test, y_test) = create_data_loader(
@@ -110,12 +158,14 @@ def main(batch_size: int = 30, test_size: float = 0.2, lr: float = 0.01,
             transform=transform
         )
 
+        # creating training pipeline
         model = CentralizedModel(layer_size_vec=(x_test.shape[1], 64, 32, 1))
         loss_fn = nn.L1Loss()
         optimizer = SGD(model.parameters(), lr=lr)
 
         #print("[INFO] Training start...")
 
+        # training model
         epoch_hist, train_loss, test_loss = trainer(
             model=model,
             n_epoch=n_epoch,
@@ -127,9 +177,11 @@ def main(batch_size: int = 30, test_size: float = 0.2, lr: float = 0.01,
             logger_index=logger_index
         )
 
+        # saving results
         train_int_hist[run_index, :] = train_loss
         test_int_hist[run_index, :] = test_loss
     
+    # CI calculation
     train_mean = np.mean(train_int_hist, axis=0)
     train_std = np.std(train_int_hist, axis=0)
     train_ci = 1.96*train_std/np.sqrt(n)
