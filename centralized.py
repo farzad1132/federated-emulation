@@ -122,7 +122,7 @@ def trainer(model: nn.Module, n_epoch: int, train_loader: DataLoader, optimizer,
 
                 test_loss_hist.append(test_loss)
                 train_loss_hist.append(train_loss)
-                epoch_hist.append(epoch)
+                epoch_hist.append(epoch*logger_index)
     
     return (epoch_hist, train_loss_hist, test_loss_hist)
 
