@@ -117,7 +117,7 @@ def agent_trainer(model: nn.Module, n_epoch: int, train_loader: DataLoader, lr,
     loss_fn, mu: float, logger_index: int = 1) -> List[torch.Tensor]:
 
     def inexact_loss(mu: int, old_params: List[torch.Tensor], new_params: torch.Tensor) -> float:
-        return 0.5*mu*np.sum([np.power(np.linalg.norm(n_par-o_par, 2), 2) 
+        return 0.5*mu*np.sum([np.linalg.norm(n_par-o_par, 2)
             for (n_par, o_par) in zip(new_params, old_params)])
     
     local_model = deepcopy(model)
@@ -154,7 +154,7 @@ def co_aggregation(layer_size_vec: List[int], new_params: List[List[torch.Tensor
 
 
 def main(mu: float, n_agents: int = 3, n_round: int = 30, batch_size: int = 30, test_size: float = 0.2,
-        lr: float = 0.01, n_epoch: int = 5, logger_index: int = 1, n: int = 20):
+        lr: float = 0.05, n_epoch: int = 5, logger_index: int = 1, n: int = 20):
     """
         Main function executing centralized learning procedure.
 
