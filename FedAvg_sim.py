@@ -1,6 +1,4 @@
-from statistics import mode
 from typing import List, Tuple
-from xxlimited import new
 
 import numpy as np
 import torch
@@ -141,7 +139,6 @@ def co_aggregation(layer_size_vec: List[int], new_params: List[List[torch.Tensor
                     weights: List[float]) -> nn.Module:
 
     new_model = CentralizedModel(layer_size_vec=layer_size_vec)
-    new_model_params = parameter_parser(new_model, False)
     n_agent = len(weights)
 
     for layer, layer_param in enumerate(new_model.parameters()):
