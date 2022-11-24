@@ -155,7 +155,7 @@ def co_aggregation(layer_size_vec: List[int], new_params: List[List[torch.Tensor
     return new_model
 
 
-def main(mu: float, n_agents: int = 3, n_round: int = 30, batch_size: int = 20, test_size: float = 0.2,
+def main(mu: float, n_agents: int = 3, n_round: int = 30, batch_size: int = 30, test_size: float = 0.2,
         lr: float = 0.01, n_epoch: int = 5, logger_index: int = 1, n: int = 20):
     """
         Main function executing centralized learning procedure.
@@ -170,8 +170,8 @@ def main(mu: float, n_agents: int = 3, n_round: int = 30, batch_size: int = 20, 
             7. n: number of independent runs used for Confidence Interval calculation
     """
     
-    #train_int_hist = np.zeros((n, n_epoch))
-    #test_int_hist = np.zeros((n, n_epoch))
+    train_int_hist = np.zeros((n, n_round))
+    test_int_hist = np.zeros((n, n_round))
 
     print(f"""[INFO] parameters: batch_size: {batch_size}, test_size: {test_size}, lr: {lr}"""
         f""", n_epoch: {n_epoch}, logger_index: {logger_index}, n: {n}""")
@@ -235,18 +235,12 @@ def main(mu: float, n_agents: int = 3, n_round: int = 30, batch_size: int = 20, 
                     test_loss_hist.append(test_loss)
                     train_loss_hist.append(train_loss)
                     round_hist.append(round_index*logger_index)
-        
-        plt.plot(round_hist, train_loss_hist, color="red")
-        plt.plot(round_hist, test_loss_hist, color="blue")
-        plt.legend(["train", "test"])
-        plt.show()
 
-        
         # saving results
-        #train_int_hist[run_index, :] = train_loss
-        #test_int_hist[run_index, :] = test_loss
+        train_int_hist[run_index, :] = train_loss_hist
+        test_int_hist[run_index, :] = test_loss_hist
     
-    """ # CI calculation
+    # CI calculation
     train_mean = np.mean(train_int_hist, axis=0)
     train_std = np.std(train_int_hist, axis=0)
     train_ci = 1.96*train_std/np.sqrt(n)
@@ -257,15 +251,15 @@ def main(mu: float, n_agents: int = 3, n_round: int = 30, batch_size: int = 20, 
 
     print("[INFO] Plotting...")
 
-    plt.plot(epoch_hist, train_mean, color="red")
-    plt.fill_between(epoch_hist, train_mean-0.5*train_ci, train_mean+0.5*train_ci, color="red", alpha=0.3)
-    plt.plot(epoch_hist, test_mean, color="blue")
-    plt.fill_between(epoch_hist, test_mean-0.5*test_ci, test_mean+0.5*test_ci, color="blue", alpha=0.3)
+    plt.plot(round_hist, train_mean, color="red")
+    plt.fill_between(round_hist, train_mean-0.5*train_ci, train_mean+0.5*train_ci, color="red", alpha=0.3)
+    plt.plot(round_hist, test_mean, color="blue")
+    plt.fill_between(round_hist, test_mean-0.5*test_ci, test_mean+0.5*test_ci, color="blue", alpha=0.3)
     plt.legend(["train mean", "train 95% CI", "test mean", "test 95% CI"])
     plt.xlabel("epoch")
     plt.ylabel("loss")
     plt.title(f"CI of train and test loss with n={n}, lr={lr}")
-    plt.show() """
+    plt.show()
 
 if __name__ == "__main__":
-    main(n=1, mu=0)
+    main(n=10, mu=0)
