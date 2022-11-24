@@ -1,3 +1,5 @@
+import time
+from copy import deepcopy
 from typing import List, Tuple
 
 import numpy as np
@@ -11,7 +13,6 @@ from torch.optim import SGD
 from torch.utils.data import DataLoader, Dataset
 
 import seaborn as sns; sns.set()
-from copy import deepcopy
 
 
 class CustomDataSet(Dataset):
@@ -169,6 +170,7 @@ def main(mu: float, n_agents: int = 3, n_round: int = 30, batch_size: int = 30, 
     
     train_int_hist = np.zeros((n, n_round))
     test_int_hist = np.zeros((n, n_round))
+    duration_hist = np.zeros(n)
 
     print(f"""[INFO] parameters: batch_size: {batch_size}, test_size: {test_size}, lr: {lr}"""
         f""", n_epoch: {n_epoch}, logger_index: {logger_index}, n: {n}""")
@@ -199,6 +201,8 @@ def main(mu: float, n_agents: int = 3, n_round: int = 30, batch_size: int = 30, 
 
         #print("[INFO] Training start...")
         global_model = CentralizedModel(layer_size_vec=layer_size_vec)
+
+        start_time = time.time()
 
         for round_index in range(n_round):
             new_params = []
@@ -236,6 +240,7 @@ def main(mu: float, n_agents: int = 3, n_round: int = 30, batch_size: int = 30, 
         # saving results
         train_int_hist[run_index, :] = train_loss_hist
         test_int_hist[run_index, :] = test_loss_hist
+        duration_hist[run_index] = time.time() - start_time
     
     # CI calculation
     train_mean = np.mean(train_int_hist, axis=0)
@@ -246,6 +251,10 @@ def main(mu: float, n_agents: int = 3, n_round: int = 30, batch_size: int = 30, 
     test_std = np.std(test_int_hist, axis=0)
     test_ci = 1.96*test_std/np.sqrt(n)
 
+    dur_mean = np.mean(duration_hist)
+    dur_std = np.std(duration_hist)
+    dur_ci = 1.96*dur_std/np.sqrt(n)
+
     print("[INFO] Plotting...")
 
     plt.plot(round_hist, train_mean, color="red")
@@ -255,7 +264,7 @@ def main(mu: float, n_agents: int = 3, n_round: int = 30, batch_size: int = 30, 
     plt.legend(["train mean", "train 95% CI", "test mean", "test 95% CI"])
     plt.xlabel("epoch")
     plt.ylabel("loss")
-    plt.title(f"CI of train and test loss with n={n}, lr={lr}")
+    plt.title(f"CI of train and test loss with n={n}, lr={lr}, duration:{dur_mean:0.2f} $\pm$ {dur_ci:0.2f}")
     plt.show()
 
 if __name__ == "__main__":
