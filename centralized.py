@@ -127,8 +127,8 @@ def trainer(model: nn.Module, n_epoch: int, train_loader: DataLoader, optimizer,
     return (epoch_hist, train_loss_hist, test_loss_hist)
 
 
-def main(batch_size: int = 30, test_size: float = 0.2, lr: float = 0.01,
-        n_epoch: int = 80, logger_index: int = 1, transform: bool = True, n: int = 20):
+def main(batch_size: int = 10, test_size: float = 0.2, lr: float = 0.05,
+        n_epoch: int = 60, logger_index: int = 1, transform: bool = True, n: int = 20):
     """
         Main function executing centralized learning procedure.
 
