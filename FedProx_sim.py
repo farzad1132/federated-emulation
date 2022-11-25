@@ -51,7 +51,7 @@ def data_splitter(loader, batch_size: int, n_agents: int, test_size: float = 0.2
 
             done = True
             for index in range(len(rand_digit)-1):
-                if rand_digit[index+1]-rand_digit[index] <= size/10:
+                if rand_digit[index+1]-rand_digit[index] <= size/100:
                     done = False
                     break
         
@@ -131,7 +131,7 @@ def agent_trainer(model: nn.Module, n_epoch: int, train_loader: DataLoader, lr,
         """
             proximity loss (used for FedProx)
         """
-        return 0.5*mu*np.sum([np.linalg.norm(n_par-o_par, 2)
+        return 0.5*mu*sum([torch.sum(n_par-o_par)**2
             for (n_par, o_par) in zip(new_params, old_params)])
     
     local_model = deepcopy(model)
@@ -141,7 +141,7 @@ def agent_trainer(model: nn.Module, n_epoch: int, train_loader: DataLoader, lr,
     # If "variable_E" is true then variable number of epochs will be selected for each agent
     # depending on their dataset size
     if variable_E:
-        n_epoch = math.ceil(len(train_loader)/15)
+        n_epoch = math.ceil(len(train_loader.dataset)/100)
     for _ in range(n_epoch):
         for (x_b, y_b) in train_loader:
             y_b = torch.reshape(y_b, (-1, 1))
@@ -175,9 +175,9 @@ def co_aggregation(layer_size_vec: List[int], new_params: List[List[torch.Tensor
     return new_model
 
 
-def main(mu: float = 0, n_agents: int = 3, n_round: int = 30, batch_size: int = 10,
-        test_size: float = 0.2, lr: float = 0.05, n_epoch: int = 2,
-        logger_index: int = 1, n: int = 10, non_iid: bool = True, variable_E: bool = False):
+def main(mu: float = 3, n_agents: int = 3, n_round: int = 20, batch_size: int = 1,
+        test_size: float = 0.2, lr: float = 0.01, n_epoch: int = 2,
+        logger_index: int = 1, n: int = 10, non_iid: bool = True, variable_E: bool = True):
     """
         Main function executing centralized learning procedure.
 
